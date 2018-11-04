@@ -21,7 +21,7 @@ architecture WS2812_TB of WS2812_TB is
 
 begin
 	modulator : entity work.WS2812
-	--generic map(PERIOD => 6, ONE=>4, ZERO=>2)
+	generic map(PERIOD => 10, ONE=>8, ZERO=>2)
 	port map(
 			RST 	=> RST,
 			CLK 	=> CLK,
@@ -76,7 +76,7 @@ begin
 		SEND <= '0'; 	 
 		
 		wait until RDY = '1';  
-		wait for CLK_PERIOD*5;
+		wait for CLK_PERIOD*10;
 		R<="10000001";
 		G<="01111110";
 		B<="00011000";
