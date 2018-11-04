@@ -1,5 +1,8 @@
+
 # Created by https://www.gitignore.io/api/eclipse,alteraquartusii
 # Edit at https://www.gitignore.io/?templates=eclipse,alteraquartusii
+
+
 
 ### AlteraQuartusII ###
 ##list taken from http://www.alterawiki.com/wiki/Version_Control (01.10.2015)
@@ -39,8 +42,8 @@
 # software binary files
 ### tbd
 
-/*
-!/*.gitignore
+#/*
+#!/*.gitignore
 ##
 !*.qpf
 !*.qsf
@@ -62,6 +65,8 @@
 ## tbd
 
 !*.tcl
+
+
 
 ### Eclipse ###
 
