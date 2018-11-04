@@ -1,0 +1,57 @@
+<config>
+    <version>
+        2.1
+    </version>
+    <comment>
+    </comment>
+    <databases>
+        <database id="">*virtual*</database>
+        <database id="LOCAL___027ade5b3251e40fc401">SPI.asdb</database>
+    </databases>
+    <signallists>
+        <signallist id="0">
+        <signal>/SPI_TB/slave/SCLK_sample_n</signal>
+        <signal>/SPI_TB/slave/SCLK_sample_n_1</signal>
+        <signal>/SPI_TB/slave/SCLK_falling</signal>
+        <signal>/SPI_TB/slave/SCLK_rising</signal>
+        <signal>/SPI_TB/slave/bit_cnt</signal>
+        <signal>/SPI_TB/slave/bit_cnt_max</signal>
+        <signal>/SPI_TB/slave/last_bit_en</signal>
+        <signal>/SPI_TB/slave/rx_data</signal>
+        <signal>/SPI_TB/slave/rx_data_vld</signal>
+        <signal>/SPI_TB/slave/idle_flag</signal>
+        <signal>/SPI_TB/slave/CLK</signal>
+        <signal>/SPI_TB/slave/RST</signal>
+        <signal>/SPI_TB/slave/SCLK</signal>
+        <signal>/SPI_TB/slave/CS_N</signal>
+        <signal>/SPI_TB/slave/MOSI</signal>
+        <signal>/SPI_TB/slave/DOUT</signal>
+        <signal>/SPI_TB/slave/DOUT_VLD</signal>
+        <signal>/SPI_TB/slave/IDLE</signal>
+        </signallist>
+    </signallists>
+    <prefbases>
+        <prefbase id="0" >
+            <pref name="End Time" value="27588377" />
+            <pref name="Start Time" value="1313732" />
+        </prefbase>
+    </prefbases>
+    <bookmarkbases>
+        <bookmarks id="0">
+        </bookmarks>
+    </bookmarkbases>
+    <cursorbases>
+        <cursors id="0">
+            <cursor value="25000000" label="Cursor 1" locked="0" />
+        </cursors>
+    </cursorbases>
+    <measurementbases>
+    </measurementbases>
+    <commentbases>
+        <comments id="0">
+        </comments>
+    </commentbases>
+    <views>
+        <view signallist="0" propertybase="0" prefbase="0" type="1" bookmarks="0" cursors="0" measurements="-1" comments="-1" />
+    </views>
+</config>

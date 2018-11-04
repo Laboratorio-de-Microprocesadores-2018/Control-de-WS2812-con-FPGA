@@ -1,0 +1,98 @@
+[Project]
+Current Flow=Generic
+VCS=0
+version=4
+Current Config=compile
+
+[Configurations]
+compile=ledcontroller
+
+[Library]
+ledcontroller=.\Guia VHDL\guia_vhdl.lib
+
+[Settings]
+AccessRead=0
+AccessReadWrite=0
+AccessACCB=0
+AccessACCR=0
+AccessReadWriteSLP=0
+AccessReadTopLevel=1
+DisableC=1
+ENABLE_ADV_DATAFLOW=0
+FLOW_TYPE=HDL
+LANGUAGE=VHDL
+REFRESH_FLOW=1
+FLOWTOOLS=NONE
+FAMILY=Altera CycloneIVE
+
+[LocalVerilogSets]
+EnableSLP=1
+EnableDebug=0
+
+[LocalVhdlSets]
+CompileWithDebug=1
+NetlistCompilation=1
+EnableVHDL93Key=0
+EnableVHDL2002Key=0
+EnableVHDL2008Key=1
+DisableVHDL87Key=0
+Syntax RelaxLRM=0
+MaxErrorsKey=100
+OptimizationLevel=3
+DisableRangeChecks=0
+ProtectLevel=0
+IncrementalCompilation=0
+AdditionalOptions=
+ReorderOnFirstRebuild=1
+ElaborationAfterCompilation=0
+PrintErrWarnOnly=0
+GenMultiplatformLib=0
+VhdlPreservePortComments=0
+VhdlChangeEvalAsynchronous=0
+VhdlDisableAssertionsProcessing=0
+
+[SpecTracer]
+WindowVisible=0
+
+[$LibMap$]
+Active_lib=
+ledcontroller=.
+
+[Files]
+/Counter.vhd=-1
+/SPI.vhd=-1
+/WS2812.vhd=-1
+/DECODER.vhd=-1
+/UPDATE_DISPLAY.vhd=-1
+/WS2812_TB.vhd=-1
+/SPI_TB.vhd=-1
+/DECODER_TB.vhd=-1
+/WS2812.asdb=-1
+/WS2812.awc=-1
+/DECODER_TB.asdb=-1
+/DECODER_TB.awc=-1
+/SPI.asdb=-1
+/SPI.awc=-1
+
+[Files.Data]
+.\src\Counter.vhd=VHDL Source Code
+.\src\SPI.vhd=VHDL Source Code
+.\src\WS2812.vhd=VHDL Source Code
+.\src\DECODER.vhd=VHDL Source Code
+.\src\UPDATE_DISPLAY.vhd=VHDL Source Code
+.\src\WS2812_TB.vhd=VHDL Source Code
+.\src\SPI_TB.vhd=VHDL Source Code
+.\src\DECODER_TB.vhd=VHDL Source Code
+.\src\WS2812.asdb=Accelerated Waveform File
+.\src\WS2812.awc=Accelerated Waveform Configuration
+
+.\src\DECODER_TB.asdb=Accelerated Waveform File
+.\src\DECODER_TB.awc=Accelerated Waveform Configuration
+.\src\SPI.asdb=Accelerated Waveform File
+.\src\SPI.awc=Accelerated Waveform Configuration
+[HierarchyViewer]
+HierarchyInformation=   
+ShowHide=ShowTopLevel
+Selected=
+[ORDER]
+Synchronize=1

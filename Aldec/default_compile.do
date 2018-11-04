@@ -1,0 +1,8 @@
+acom -2008 -dbg -e 100 -protect 0 -reorder "$dsn/src/counter.vhd"
+acom -2008 -dbg -e 100 -protect 0 -reorder "$dsn/src/spi.vhd"
+acom -2008 -dbg -e 100 -protect 0 -reorder "$dsn/src/ws2812.vhd"
+acom -2008 -dbg -e 100 -protect 0 -reorder "$dsn/src/decoder.vhd"
+acom -2008 -dbg -e 100 -protect 0 -reorder "$dsn/src/update_display.vhd"
+acom -2008 -dbg -e 100 -protect 0 -reorder "$dsn/src/ws2812_tb.vhd"
+acom -2008 -dbg -e 100 -protect 0 -reorder "$dsn/src/spi_tb.vhd"
+acom -2008 -dbg -e 100 -protect 0 -reorder "$dsn/src/decoder_tb.vhd"
