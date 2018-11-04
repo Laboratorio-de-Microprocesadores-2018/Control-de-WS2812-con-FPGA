@@ -73,6 +73,10 @@
 .metadata
 bin/
 tmp/
+Debug/
+*.o
+*.ld
+*.ini
 *.tmp
 *.bak
 *.swp
