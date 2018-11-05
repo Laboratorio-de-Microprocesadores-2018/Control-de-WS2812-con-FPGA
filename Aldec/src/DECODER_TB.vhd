@@ -93,11 +93,11 @@ begin
 		end loop;
 		
 		
-		wait for 30ns;
+		wait for 100ns;
 		cs_n<='1';
-		wait for 30ns;
+		wait for 100ns;
 		cs_n<='0';	
-		wait for 30ns; 
+		wait for 100ns; 
 		
 		for	j in 0 to 7 loop 
 				mosi <= UPDATE(j);	 
@@ -107,7 +107,7 @@ begin
 		        wait for SCLK_PERIOD/2;
 		end loop; 
 		
-		wait for 30ns;
+		wait for 100ns;
 		cs_n<='1';
 		
 		wait;

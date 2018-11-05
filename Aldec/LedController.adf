@@ -63,7 +63,6 @@ ledcontroller=.
 /SPI.vhd=-1
 /WS2812.vhd=-1
 /DECODER.vhd=-1
-/UPDATE_DISPLAY.vhd=-1
 /WS2812_TB.vhd=-1
 /SPI_TB.vhd=-1
 /DECODER_TB.vhd=-1
@@ -85,14 +84,16 @@ ledcontroller=.
 .\src\DECODER_TB.vhd=VHDL Source Code
 .\src\WS2812.asdb=Accelerated Waveform File
 .\src\WS2812.awc=Accelerated Waveform Configuration
-
 .\src\DECODER_TB.asdb=Accelerated Waveform File
 .\src\DECODER_TB.awc=Accelerated Waveform Configuration
 .\src\SPI.asdb=Accelerated Waveform File
 .\src\SPI.awc=Accelerated Waveform Configuration
+
 [HierarchyViewer]
-HierarchyInformation=   
+HierarchyInformation=decoder_tb|SIM|0 ws2812_tb|WS2812_TB|0
 ShowHide=ShowTopLevel
 Selected=
+
 [ORDER]
 Synchronize=1
+

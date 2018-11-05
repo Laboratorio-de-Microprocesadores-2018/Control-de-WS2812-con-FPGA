@@ -28,18 +28,20 @@ architecture DECODER of DECODER is
 begin  
 	process(CLK)
 	begin	
-		case state is
-			when IDLE =>   
-				if(falling_edge(CLK) and CMD_RDY = '1')	then
-					current_cmd <= CMD;	  
-					state <= COMMAND;
-				end if;
-			when COMMAND =>
-				if(rising_edge(CLK) and EN = '1') then
-					current_cmd <= "00000000";
-					state <= IDLE;
-				end if;
-		end case;
+		if(rising_edge(CLK))then
+			case state is
+				when IDLE =>   
+					 if(CMD_RDY = '1')	then
+						current_cmd <= CMD;	  
+						state <= COMMAND;
+					end if;
+				when COMMAND =>
+					if(EN = '1') then
+						current_cmd <= "00000000";
+						state <= IDLE;
+					end if;
+			end case; 
+		end if;
 	end process;
 	
 	process(CLK)

@@ -4,18 +4,16 @@ use IEEE.std_logic_1164.all;
 entity WS2812 is
 	generic(
 		PERIOD	:integer := 125;   -- Period in CLK ticks
-		ONE		:natural := 45;	   -- For a '1' pule, interval of period remaining in high
-		ZERO	:natural := 85	   -- For a '0' pule, interval of period remaining in high
+		ONE		:natural := 80;	   -- For a '1' pule, interval of period remaining in high
+		ZERO	:natural := 40	   -- For a '0' pule, interval of period remaining in high
 	);
 	
 	port( 
 		RST 	: in STD_LOGIC;				   -- Reset signal
 		CLK 	: in STD_LOGIC; 			   -- System clock
-		R 	  	: in STD_LOGIC_VECTOR(0 to 7); -- Red value
-		G	  	: in STD_LOGIC_VECTOR(0 to 7); -- Green value
-		B	  	: in STD_LOGIC_VECTOR(0 to 7); -- Blue value
+		GRB	  	: in STD_LOGIC_VECTOR(0 to 23);-- Color GRB
 		SEND    : in STD_LOGIC; 			   -- Set to '1' between two falling edges of CLK to send  
-		RDY   : out STD_LOGIC;				   -- Flag to notify when 'SEND' is available again
+		RDY     : out STD_LOGIC;				   -- Flag to notify when 'SEND' is available again
 		LED_OUT : out STD_LOGIC			   -- Output modulated signal	
 	    );
 end WS2812;
@@ -52,7 +50,7 @@ begin
 			case state is
 				when IDLE =>
 					if(SEND = '1') then 			-- When SEND is asserted latch R,G,B into color 
-						color <= G & R & B;			-- Reset variables
+						color <= GRB;			-- Reset variables
 						count :=0;	
 						currentBit := 0;
 						state <= SENDING;			-- And go to SENDIND state
@@ -79,7 +77,7 @@ begin
 					count := count + 1;	  		    -- Keep increasing counter
 					
 					if(SEND = '1') then 			-- If SEND is asserted, latch the new color and go to SENDING state
-						color <= R & G & B;	
+						color <= GRB;	
 						currentBit := 0;		
 						state <= SENDING;
 					elsif(count = PERIOD) then		-- If count reaches PERIOD and SEND has not been asserted, return to IDLE state

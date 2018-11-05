@@ -11,10 +11,11 @@ architecture WS2812_TB of WS2812_TB is
 	constant CLK_PERIOD  : time := 10 ns;
 
 	signal RST 		: STD_LOGIC;
-	signal CLK 		: STD_LOGIC; 
+	signal CLK 		: STD_LOGIC; 	
 	signal R 		: STD_LOGIC_VECTOR(0 to 7);
-	signal G		: STD_LOGIC_VECTOR(0 to 7);
-	signal B		: STD_LOGIC_VECTOR(0 to 7); 
+	signal G 		: STD_LOGIC_VECTOR(0 to 7);
+	signal B 		: STD_LOGIC_VECTOR(0 to 7);
+	signal GRB 		: STD_LOGIC_VECTOR(0 to 23);
 	signal SEND 	: STD_LOGIC; 
 	signal LED_OUT	: STD_LOGIC;
 	signal RDY   	: STD_LOGIC;
@@ -25,9 +26,7 @@ begin
 	port map(
 			RST 	=> RST,
 			CLK 	=> CLK,
-			R 	  	=> R,
-			G	  	=> G,
-			B	  	=> B,
+			GRB     => GRB,
 			SEND    => SEND,
 			LED_OUT => LED_OUT,
 			RDY   	=> RDY); 
@@ -49,7 +48,8 @@ begin
 		wait for 30ns;	
 		G<="11110000";
 		R<="11001100";
-		B<="10101010";
+		B<="10101010"; 
+		GRB <= G & R & B;
 		wait until falling_edge(CLK);
 		SEND <= '1';
 		wait until falling_edge(CLK);
@@ -59,7 +59,8 @@ begin
 		wait for CLK_PERIOD*5;
 		R<="00000000";
 		G<="00000000";
-		B<="00000000";
+		B<="00000000";	
+		GRB <= G & R & B;
 		wait until falling_edge(CLK);
 		SEND <= '1';
 		wait until falling_edge(CLK);
@@ -69,7 +70,8 @@ begin
 		wait for CLK_PERIOD*5;
 		R<="11111111";
 		G<="11111111";
-		B<="11111111";
+		B<="11111111"; 
+		GRB <= G & R & B;
 		wait until falling_edge(CLK);
 		SEND <= '1';
 		wait until falling_edge(CLK);
@@ -79,7 +81,8 @@ begin
 		wait for CLK_PERIOD*10;
 		R<="10000001";
 		G<="01111110";
-		B<="00011000";
+		B<="00011000";	
+		GRB <= G & R & B;
 		wait until falling_edge(CLK);
 		SEND <= '1';
 		wait until falling_edge(CLK);
