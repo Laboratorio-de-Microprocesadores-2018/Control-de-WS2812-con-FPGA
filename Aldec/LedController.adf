@@ -58,37 +58,6 @@ WindowVisible=0
 Active_lib=
 ledcontroller=.
 
-[Files]
-/Counter.vhd=-1
-/SPI.vhd=-1
-/WS2812.vhd=-1
-/DECODER.vhd=-1
-/WS2812_TB.vhd=-1
-/SPI_TB.vhd=-1
-/DECODER_TB.vhd=-1
-/WS2812.asdb=-1
-/WS2812.awc=-1
-/DECODER_TB.asdb=-1
-/DECODER_TB.awc=-1
-/SPI.asdb=-1
-/SPI.awc=-1
-
-[Files.Data]
-.\src\Counter.vhd=VHDL Source Code
-.\src\SPI.vhd=VHDL Source Code
-.\src\WS2812.vhd=VHDL Source Code
-.\src\DECODER.vhd=VHDL Source Code
-.\src\UPDATE_DISPLAY.vhd=VHDL Source Code
-.\src\WS2812_TB.vhd=VHDL Source Code
-.\src\SPI_TB.vhd=VHDL Source Code
-.\src\DECODER_TB.vhd=VHDL Source Code
-.\src\WS2812.asdb=Accelerated Waveform File
-.\src\WS2812.awc=Accelerated Waveform Configuration
-.\src\DECODER_TB.asdb=Accelerated Waveform File
-.\src\DECODER_TB.awc=Accelerated Waveform Configuration
-.\src\SPI.asdb=Accelerated Waveform File
-.\src\SPI.awc=Accelerated Waveform Configuration
-
 [HierarchyViewer]
 HierarchyInformation=decoder_tb|SIM|0 ws2812_tb|WS2812_TB|0
 ShowHide=ShowTopLevel
@@ -97,3 +66,41 @@ Selected=
 [ORDER]
 Synchronize=1
 
+[Files]
+/UpdateMemory.vhd=-1
+/Counter.vhd=-1
+/SPI.vhd=-1
+/WS2812.vhd=-1
+/DECODER.vhd=-1
+/WS2812_TB.vhd=-1
+/SPI_TB.vhd=-1
+/DECODER_TB.vhd=-1
+/RAM.vhd=-1
+/WS2812.asdb=-1
+/WS2812.awc=-1
+/DECODER_TB.asdb=-1
+/DECODER_TB.awc=-1
+/SPI.asdb=-1
+/SPI.awc=-1
+/UpdateMemory_TB.vhd=-1
+/RAM_WRITE_TB.vhd=-1
+
+[Files.Data]
+.\src\UpdateMemory.vhd=VHDL Source Code
+.\src\Counter.vhd=VHDL Source Code
+.\src\SPI.vhd=VHDL Source Code
+.\src\WS2812.vhd=VHDL Source Code
+.\src\DECODER.vhd=VHDL Source Code
+.\src\WS2812_TB.vhd=VHDL Source Code
+.\src\SPI_TB.vhd=VHDL Source Code
+.\src\DECODER_TB.vhd=VHDL Source Code
+.\src\RAM.vhd=VHDL Source Code
+.\src\WS2812.asdb=Accelerated Waveform File
+.\src\WS2812.awc=Accelerated Waveform Configuration
+.\src\DECODER_TB.asdb=Accelerated Waveform File
+.\src\DECODER_TB.awc=Accelerated Waveform Configuration
+.\src\SPI.asdb=Accelerated Waveform File
+.\src\SPI.awc=Accelerated Waveform Configuration
+.\src\UpdateMemory_TB.vhd=VHDL Source Code
+
+.\src\RAM_WRITE_TB.vhd=VHDL Source Code
