@@ -16,7 +16,7 @@ static uint8_t numberOfLeds;
 static bool screenBusy;
 static bool colorTestRunning;
 
-void LedMatrix_Init()
+void LedMatrix_Init(void)
 {
 	sysTickInit();
 
@@ -24,7 +24,7 @@ void LedMatrix_Init()
 	screenBufferSize =  numberOfLeds * 3;
 
 }
-void LedMatrix_Clear()
+void LedMatrix_Clear(void)
 {
 
 	//SPI_StartTransfer();
@@ -39,12 +39,12 @@ void LedMatrix_PlainColor(Color c)
 	}
 	//SPI_StartTransfer();
 }
-void LedMatrix_ColorTest()
+void LedMatrix_ColorTest(void)
 {
 
 }
 
-bool LedMatrix_ColorTestRunning()
+bool LedMatrix_ColorTestRunning(void)
 {
 	return colorTestRunning;
 }
