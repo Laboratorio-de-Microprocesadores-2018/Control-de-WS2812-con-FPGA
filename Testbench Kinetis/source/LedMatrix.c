@@ -41,7 +41,7 @@ static void LedMatrix_SendUpdate();
 //                          Global Function Definitions                        //
 /////////////////////////////////////////////////////////////////////////////////
 
-void LedMatrix_Init()
+void LedMatrix_Init(void)
 {
 	sysTickInit();
 
@@ -81,7 +81,7 @@ void LedMatrix_Init()
 	SPI_MasterInit(&SPIConfig);
 
 }
-void LedMatrix_Clear()
+void LedMatrix_Clear(void)
 {
 
 	//SPI_StartTransfer();
@@ -94,14 +94,14 @@ void LedMatrix_PlainColor(Color c)
 	}
 	LedMatrix_WriteMemory();
 }
-void LedMatrix_ColorTest()
+void LedMatrix_ColorTest(void)
 {
 	colorTestRunning = true;
 
 	LedMatrix_WriteMemory();
 }
 
-bool LedMatrix_ColorTestRunning()
+bool LedMatrix_ColorTestRunning(void)
 {
 	return colorTestRunning;
 }
