@@ -1,8 +1,8 @@
-[OPENDOC|Aldec.Hde.HdePlugIn.7|.\src\WS2812_TB.vhd|]
+[OPENDOC|Aldec.Hde.HdePlugIn.7|.\src\UpdateMemory.vhd|]
 TemplateId=0
-[OPENDOC|Aldec.Hde.HdePlugIn.7|.\src\WS2812.vhd|]
+[OPENDOC|Aldec.Hde.HdePlugIn.7|.\src\UpdateMemory_TB.vhd|]
 TemplateId=0
-[OPENDOC|Aldec.Hde.HdePlugIn.7|.\src\DECODER.vhd|]
+[OPENDOC|Aldec.Hde.HdePlugIn.7|.\src\RAM.vhd|]
 TemplateId=0
-[OPENDOC|Aldec.Hde.HdePlugIn.7|.\src\DECODER_TB.vhd|]
+[OPENDOC|Aldec.Hde.HdePlugIn.7|.\src\RAM_WRITE_TB.vhd|]
 TemplateId=0

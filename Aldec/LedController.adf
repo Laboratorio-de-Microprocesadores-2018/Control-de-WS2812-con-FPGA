@@ -59,7 +59,7 @@ Active_lib=
 ledcontroller=.
 
 [HierarchyViewer]
-HierarchyInformation=decoder_tb|SIM|0 ws2812_tb|WS2812_TB|0
+HierarchyInformation=decoder_tb|SIM|0 ram_write_tb|SIM|0 updatememory_tb|SIM|0 
 ShowHide=ShowTopLevel
 Selected=
 
