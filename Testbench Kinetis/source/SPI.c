@@ -9,8 +9,10 @@
 
 static SPI_Type * SPIs[] = SPI_BASE_ADDRS;
 
+
 // Bytes left in current transfer
-static bytesLeft;
+static uint8_t bytesLeft;
+static SPI_Callback transferCallback;
 
 NEW_CIRCULAR_BUFFER(transmitBuffer,BUFFER_SIZE,sizeof(uint8_t));
 NEW_CIRCULAR_BUFFER(recieveBuffer,BUFFER_SIZE,sizeof(uint8_t));
@@ -130,7 +132,14 @@ void SPI_DisableTxFIFOFillRequests(SPI_Instance n)
 {
 	SPIs[n]->RSER &= !SPI_RSER_TFFF_RE_MASK;
 }
-
+void SPI_EnableEOQInterruptRequests(SPI_Instance n)
+{
+	SPIs[n]->RSER |= SPI_RSER_EOQF_RE_MASK;
+}
+void SPI_DisableEOQInterruptRequests(SPI_Instance n)
+{
+	SPIs[n]->RSER &= ~SPI_RSER_EOQF_RE_MASK;
+}
 uint32_t SPI_GetDataRegisterAddress(SPI_Instance n)
 {
 	return SPIs[n]->PUSHR;
@@ -160,12 +169,15 @@ int SPI_SendFrame(uint8_t * data, uint8_t length, SPI_Callback callback)
 			break;
 		}
 
-	if(bytesSent == 0) // If didnt break..
+	if(bytesSent == 0) // If didn't break..
 		bytesSent = length;
 
 	// Store bytes left
 	bytesLeft = bytesSent;
 
+	transferCallback = callback;
+
+	// Enable interrupts to start copying bytes from circular buffer to SPI module
 	SPI_EnableTxFIFOFillInterruptRequests(SPI_0);
 	return bytesSent;
 }
@@ -179,34 +191,44 @@ bool SPI_ReceiveByte(uint8_t * byte)
 void SPI0_IRQHandler(void)
 {
 
-	// If HALT bit is set, clear it and EOQF to start transfer
-	if((SPIs[0]->MCR & SPI_MCR_HALT_MASK) == SPI_MCR_HALT_MASK)
-	{
-		SPIs[0]->SR |= SPI_SR_EOQF_MASK; 	// W1C
-		SPIs[0]->MCR &= ~SPI_MCR_HALT_MASK;
-	}
-
-	// If TFFF bit is set there is space in fifo
+	// If TFFF bit is set there is space in Tx FIFO
 	if((SPIs[0]->SR & SPI_SR_TFFF_MASK) == SPI_SR_TFFF_MASK)
 	{
+		// If HALT bit is set, clear it to start transfer
+		if((SPIs[0]->MCR & SPI_MCR_HALT_MASK) == SPI_MCR_HALT_MASK)
+		{
+			//SPIs[0]->SR |= SPI_SR_EOQF_MASK; 	// W1C
+			SPIs[0]->MCR &= ~SPI_MCR_HALT_MASK;
+		}
+
 		// If there is a new byte in circular buffer, send it
 		uint8_t byte;
 		if(pop(&transmitBuffer, &byte))
 		{
-			SPIs[0]->PUSHR = (SPIs[0]->PUSHR & ~SPI_PUSHR_TXDATA_MASK)| SPI_PUSHR_TXDATA(byte);
+			uint32_t pushr = SPIs[0]->PUSHR;
+			pushr &= ~SPI_PUSHR_TXDATA_MASK;
+			pushr |=SPI_PUSHR_TXDATA(byte);
+
+			// If its last byte, set end of queue bit and disable fill interrupts
+			if(isEmpty(&transmitBuffer))
+			{
+				pushr |= SPI_PUSHR_EOQ_MASK;
+				SPI_DisableTxFIFOFillRequests(SPI_0);
+			}
+
+			SPIs[0]->PUSHR = pushr;
 		}
 
-		else
-		{
-			// If not disable interrupts
-			SPI_DisableTxFIFOFillRequests(SPI_0);
-		}
 
 	}
-
-	uint8_t byte;
-
-
+	/// If EOQF bit is set, transmision has ended
+	else if((SPIs[0]->SR & SPI_SR_EOQF_MASK) == SPI_SR_EOQF_MASK)
+	{
+		SPIs[0]->SR |= SPI_SR_EOQF_MASK; // Clear EOQF flag
+		// Call user callback
+		if(transferCallback!=NULL)
+			transferCallback();
+	}
 
 	/*
 

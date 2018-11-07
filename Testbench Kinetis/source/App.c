@@ -47,7 +47,7 @@ void App_Init (void)
 	config.baudRate = SPI_tenPowerDelay;
 	config.continuousSlaveSelection = true;
 	SPI_MasterInit(SPI_0, &config);
-
+	SPI_EnableEOQInterruptRequests(SPI_0);
 	sysTickInit();
 //	LedMatrix_Init();
 }
