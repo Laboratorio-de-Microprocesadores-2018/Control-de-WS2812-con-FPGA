@@ -46,25 +46,35 @@ void App_Init (void)
 	SPI_MasterConfig config;
 	SPI_MasterGetDefaultConfig(&config);
 	config.baudRate = SPI_tenPowerDelay;
+	config.continuousSlaveSelection = true;
 	SPI_MasterInit(SPI_0, &config);
-	DMA_Config DMAconfig;
 
+	DMA_Config DMAconfig;
 //	DMA_GetDefaultConfig(&DMAconfig);
 //	DMAconfig.enableDebugMode=false;
 //	DMA_Init(&DMAconfig);
 //	DMAMUX_Init();
 
+	sysTickInit();
 //	LedMatrix_Init();
 }
 
+void call(void)
+{
+	//static uint8_t arr[] = {4,5};
+	//SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),0);
+}
 /** Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
-	uint8_t byte;
-	byte = 0xAA;
-	SPI_SendByte( byte);
-	uint32_t n = 0xFFFFF;
-	while(n--);
+	static uint8_t arr[] = {1,2,3};
+	static uint64_t time;
+	if((millis()-time)>500)
+	{
+		time = millis();
+		SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),call);
+	}
+
 
 
 //	Color c;

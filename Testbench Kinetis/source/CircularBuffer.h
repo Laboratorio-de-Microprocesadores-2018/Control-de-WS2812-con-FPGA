@@ -100,6 +100,8 @@ void flush(CircularBuffer *this);
  */
 int numel(CircularBuffer *this);
 
+int spaceLeft(CircularBuffer *this);
+
 /**
  * @brief Check if the buffer is empty
  * @return True if the buffer is empty
