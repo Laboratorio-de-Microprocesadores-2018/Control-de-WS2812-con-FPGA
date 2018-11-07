@@ -54,6 +54,10 @@ int numel(CircularBuffer *this)
 	return this->count;
 }
 
+int spaceLeft(CircularBuffer *this)
+{
+	return this->capacity-this->count;
+}
 
 bool isEmpty(CircularBuffer *this)
 {
