@@ -3,8 +3,9 @@
 #include "Assert.h"
 #include "GPIO.h"
 #include "PORT.h"
-
-#define BUFFER_SIZE					100
+#include "CircularBuffer.h"
+#include "stdlib.h"
+#define BUFFER_SIZE					256
 
 static SPI_Type * SPIs[] = SPI_BASE_ADDRS;
 
@@ -23,9 +24,10 @@ void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config)
 	config->direction = SPI_FirstLSB;
 	config->enableMaster = true;
 	config->enableRxFIFO = true;
-	config->enableShiftRegister = true;
-//	config->enableStopInWaitMode;
 	config->enableTxFIFO = true;
+	config->enableShiftRegister = true;
+	config->continuousSlaveSelection = false;
+//	config->enableStopInWaitMode;
 //	config->outputMode;
 	config->phase = SPI_ClockPhaseSecondEdge;
 //	config->pinMode;
@@ -70,7 +72,7 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 		}else
 		{
 		//	Clock and transfer attributes register (CTAR ON SLAVE MODE)
-//			SPIs[n]->CTAR_SLAVE
+		//	SPIs[n]->CTAR_SLAVE
 		}
 	}
 
@@ -78,7 +80,7 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 //	Module configuration register (MCR)
 //	No estan configurados: FRZ, MTFE, DOZE, SMPL_PT
 //	SPIs[n]->MCR = SPI_MCR_MSTR(config->enableMaster)
-	SPIs[n]->MCR = SPI_MCR_CONT_SCKE(false) |		//ACA HABILITO O DESHABILITO EL CONTINUOUS CLK
+	SPIs[n]->MCR = SPI_MCR_CONT_SCKE(config->continuousSlaveSelection) |
 			SPI_MCR_PCSSE(false) |
 			SPI_MCR_ROOE(config->enableShiftRegister) |
 			SPI_MCR_PCSIS(config->chipSelectActiveState) |
@@ -94,15 +96,15 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 //	SPIs[n]->RSER = ;
 
 //	PUSH Tx FIFO register in master mode
-	SPIs[n]->PUSHR = SPI_PUSHR_CONT(false) |
+	SPIs[n]->PUSHR = SPI_PUSHR_CONT(false) | // Return CS signal to inactive state between transfers.
 			SPI_PUSHR_CTAS(config->CTARUsed) |
-			true << (SPI_PUSHR_PCS_SHIFT + config->PCSSignalSelect);
+			SPI_PUSHR_PCS(1<<config->PCSSignalSelect);
 
 
 	pinMode(PORTNUM2PIN(PC,5),OUTPUT);
 	PORT_Config portConfig;
 	PORT_GetPinDefaultConfig(&portConfig);
-	PORT_PinConfig(PORT_D,0, &portConfig);
+	PORT_PinConfig(PORT_D, 0, &portConfig);
 	PORT_PinConfig(PORT_D, 1, &portConfig);
 	PORT_PinConfig(PORT_D, 2, &portConfig);
 	PORT_PinConfig(PORT_D, 3, &portConfig);
@@ -126,6 +128,11 @@ void SPI_DisableTxFIFOFillRequests(SPI_Instance n)
 	SPIs[n]->RSER &= !SPI_RSER_TFFF_RE_MASK;
 }
 
+uint32_t SPI_GetDataRegisterAddress(SPI_Instance n)
+{
+	return SPIs[n]->PUSHR;
+}
+
 bool SPI_SendByte( uint8_t byte)
 {
 	if(push(&transmitBuffer, &byte))
@@ -137,27 +144,69 @@ bool SPI_SendByte( uint8_t byte)
 	else return false;
 }
 
+int SPI_SendBytes(uint8_t * data, uint8_t length)
+{
+	ASSERT(data!=NULL);
+	ASSERT(length<spaceLeft(&transmitBuffer));
+	int bytesSent = 0;
+	for(int i=0; i< length; i++)
+		if(push(&transmitBuffer, data+i)==false)
+			bytesSent = i;
+	bytesSent = length;
+
+	SPI_EnableTxFIFOFillInterruptRequests(SPI_0);
+	return bytesSent;
+}
+
 bool SPI_ReceiveByte(uint8_t * byte)
 {
 	return pop(&recieveBuffer, byte);
 }
 
+void SPI_StartTransfer()
+{
+	SPIs[0]->SR |= SPI_SR_EOQF_MASK;
+	SPIs[0]->MCR &= ~SPI_MCR_HALT_MASK;
+}
+void SPI_StopTransfer()
+{
+	SPIs[0]->MCR |= SPI_MCR_HALT_MASK;
+}
 
 void SPI0_IRQHandler(void)
 {
+	uint8_t byte;
+	// If HALT bit is set, clear it and EOQF to start transfer
+	if((SPIs[0]->MCR & SPI_MCR_HALT_MASK) == SPI_MCR_HALT_MASK)
+	{
+		SPIs[0]->SR |= SPI_SR_EOQF_MASK; 	// W1C
+		SPIs[0]->MCR &= ~SPI_MCR_HALT_MASK;
+	}
+	/*
+
+	/// If EOQF bit is cleared
 	if((SPIs[0]->SR & SPI_SR_EOQF_MASK) != SPI_SR_EOQF_MASK)
 	{
 		uint8_t byte;
+		// If HALT bit is set, clear it
 		if((SPIs[0]->MCR & SPI_MCR_HALT_MASK) == SPI_MCR_HALT_MASK)
 		{
 			SPIs[0]->MCR &= !SPI_MCR_HALT_MASK;
 		}
-		if(((SPIs[0]->SR & SPI_SR_TFFF_MASK) == SPI_SR_TFFF_MASK) && (pop(&transmitBuffer, &byte)))
+		// If TFFF bit is set there is space in fifo
+		if((SPIs[0]->SR & SPI_SR_TFFF_MASK) == SPI_SR_TFFF_MASK)
 		{
-			SPIs[0]->PUSHR = byte;
+			// If there is a new byte in circular buffer, send it
+			if(pop(&transmitBuffer, &byte))
+			{
+				SPIs[0]->PUSHR = byte;
+			}
+			else // If not disable interrupts
+				SPI_DisableTxFIFOFillRequests(SPI_0);
 		}
-		SPI_DisableTxFIFOFillRequests(SPI_0);
-	}else
+	}
+	else
 		SPIs[0]->SR |= SPI_SR_EOQF_MASK;
+		*/
 
 }

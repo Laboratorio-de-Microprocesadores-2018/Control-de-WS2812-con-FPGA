@@ -3,7 +3,7 @@
 
 #include "stdint.h"
 #include "stdbool.h"
-#include "CircularBuffer.h"
+
 
 typedef enum {SPI_0, SPI_1, SPI_2}SPI_Instance;
 typedef enum {SPI_CTAR_0, SPI_CTAR_1}SPI_CTAR;
@@ -55,7 +55,12 @@ typedef enum{
 
 typedef struct
 {
-	bool enableMaster, enableStopInWaitMode, enableShiftRegister, enableTxFIFO, enableRxFIFO;
+	bool enableMaster;
+	bool enableStopInWaitMode;
+	bool enableShiftRegister;
+	bool enableTxFIFO;
+	bool enableRxFIFO;
+	bool continuousSlaveSelection;
 	SPI_CTAR CTARUsed;
 	SPI_PCSignal PCSSignalSelect;
 	SPI_BitsPerFrame bitsPerFrame;
@@ -69,6 +74,8 @@ typedef struct
 	uint32_t baudRate;
 }SPI_MasterConfig;
 
+typedef void (*SPI_Callback)(void);
+
 void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config);
 void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config);
 
@@ -76,8 +83,12 @@ void SPI_EnableTxFIFOFillDMARequests(SPI_Instance n);
 void SPI_EnableTxFIFOFillInterruptRequests(SPI_Instance n);
 void SPI_DisableTxFIFOFillRequests(SPI_Instance n);
 
-
+uint32_t SPI_GetDataRegisterAddress(SPI_Instance n);
 
 bool SPI_SendByte( uint8_t byte);
+int SPI_SendFrame(uint8_t * data, uint8_t length, SPI_Callback);
+
+void SPI_StartTransfer();
+void SPI_StopTransfer();
 
 #endif /* SPI_H_ */
