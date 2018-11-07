@@ -9,6 +9,9 @@
 
 static SPI_Type * SPIs[] = SPI_BASE_ADDRS;
 
+// Bytes left in current transfer
+static bytesLeft;
+
 NEW_CIRCULAR_BUFFER(transmitBuffer,BUFFER_SIZE,sizeof(uint8_t));
 NEW_CIRCULAR_BUFFER(recieveBuffer,BUFFER_SIZE,sizeof(uint8_t));
 
@@ -144,15 +147,24 @@ bool SPI_SendByte( uint8_t byte)
 	else return false;
 }
 
-int SPI_SendBytes(uint8_t * data, uint8_t length)
+int SPI_SendFrame(uint8_t * data, uint8_t length, SPI_Callback callback)
 {
 	ASSERT(data!=NULL);
 	ASSERT(length<spaceLeft(&transmitBuffer));
+
 	int bytesSent = 0;
 	for(int i=0; i< length; i++)
 		if(push(&transmitBuffer, data+i)==false)
+		{
 			bytesSent = i;
-	bytesSent = length;
+			break;
+		}
+
+	if(bytesSent == 0) // If didnt break..
+		bytesSent = length;
+
+	// Store bytes left
+	bytesLeft = bytesSent;
 
 	SPI_EnableTxFIFOFillInterruptRequests(SPI_0);
 	return bytesSent;
@@ -163,25 +175,39 @@ bool SPI_ReceiveByte(uint8_t * byte)
 	return pop(&recieveBuffer, byte);
 }
 
-void SPI_StartTransfer()
-{
-	SPIs[0]->SR |= SPI_SR_EOQF_MASK;
-	SPIs[0]->MCR &= ~SPI_MCR_HALT_MASK;
-}
-void SPI_StopTransfer()
-{
-	SPIs[0]->MCR |= SPI_MCR_HALT_MASK;
-}
 
 void SPI0_IRQHandler(void)
 {
-	uint8_t byte;
+
 	// If HALT bit is set, clear it and EOQF to start transfer
 	if((SPIs[0]->MCR & SPI_MCR_HALT_MASK) == SPI_MCR_HALT_MASK)
 	{
 		SPIs[0]->SR |= SPI_SR_EOQF_MASK; 	// W1C
 		SPIs[0]->MCR &= ~SPI_MCR_HALT_MASK;
 	}
+
+	// If TFFF bit is set there is space in fifo
+	if((SPIs[0]->SR & SPI_SR_TFFF_MASK) == SPI_SR_TFFF_MASK)
+	{
+		// If there is a new byte in circular buffer, send it
+		uint8_t byte;
+		if(pop(&transmitBuffer, &byte))
+		{
+			SPIs[0]->PUSHR = (SPIs[0]->PUSHR & ~SPI_PUSHR_TXDATA_MASK)| SPI_PUSHR_TXDATA(byte);
+		}
+
+		else
+		{
+			// If not disable interrupts
+			SPI_DisableTxFIFOFillRequests(SPI_0);
+		}
+
+	}
+
+	uint8_t byte;
+
+
+
 	/*
 
 	/// If EOQF bit is cleared

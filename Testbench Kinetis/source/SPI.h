@@ -86,9 +86,7 @@ void SPI_DisableTxFIFOFillRequests(SPI_Instance n);
 uint32_t SPI_GetDataRegisterAddress(SPI_Instance n);
 
 bool SPI_SendByte( uint8_t byte);
-int SPI_SendFrame(uint8_t * data, uint8_t length, SPI_Callback);
 
-void SPI_StartTransfer();
-void SPI_StopTransfer();
+int SPI_SendFrame(uint8_t * data, uint8_t length, SPI_Callback callback);
 
 #endif /* SPI_H_ */

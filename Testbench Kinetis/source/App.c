@@ -45,20 +45,27 @@ void App_Init (void)
 	SPI_MasterConfig config;
 	SPI_MasterGetDefaultConfig(&config);
 	config.baudRate = SPI_tenPowerDelay;
+	config.continuousSlaveSelection = true;
 	SPI_MasterInit(SPI_0, &config);
 
 	sysTickInit();
 //	LedMatrix_Init();
 }
 
+void call(void)
+{
+	//static uint8_t arr[] = {4,5};
+	//SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),0);
+}
 /** Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
+	static uint8_t arr[] = {1,2,3};
 	static uint64_t time;
-	if((millis()-time)>100)
+	if((millis()-time)>500)
 	{
 		time = millis();
-		SPI_SendByte(0xAA);
+		SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),call);
 	}
 
 
