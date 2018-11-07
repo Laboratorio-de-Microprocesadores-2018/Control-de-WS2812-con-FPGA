@@ -119,7 +119,7 @@ void SPI_EnableTxFIFOFillDMARequests(SPI_Instance n)
 void SPI_EnableTxFIFOFillInterruptRequests(SPI_Instance n)
 {
 	SPIs[n]->RSER |= SPI_RSER_TFFF_RE_MASK;
-	SPIs[n]->RSER &= !SPI_RSER_TFFF_DIRS_MASK;
+	SPIs[n]->RSER &= ~SPI_RSER_TFFF_DIRS_MASK;
 }
 void SPI_DisableTxFIFOFillRequests(SPI_Instance n)
 {

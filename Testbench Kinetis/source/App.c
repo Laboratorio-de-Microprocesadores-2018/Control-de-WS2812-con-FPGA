@@ -46,17 +46,21 @@ void App_Init (void)
 	SPI_MasterGetDefaultConfig(&config);
 	config.baudRate = SPI_tenPowerDelay;
 	SPI_MasterInit(SPI_0, &config);
+
+	sysTickInit();
 //	LedMatrix_Init();
 }
 
 /** Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
-	uint8_t byte;
-	byte = 0xAA;
-	SPI_SendByte( byte);
-	uint32_t n = 0xFFFFF;
-	while(n--);
+	static uint64_t time;
+	if((millis()-time)>100)
+	{
+		time = millis();
+		SPI_SendByte(0xAA);
+	}
+
 
 
 //	Color c;

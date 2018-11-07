@@ -78,7 +78,7 @@ void LedMatrix_Init(void)
 
 	SPI_MasterConfig SPIConfig; // Con DMA deshabilitado
 	SPI_MasterGetDefaultConfig(&SPIConfig);
-	SPI_MasterInit(&SPIConfig);
+	SPI_MasterInit(SPI_0,&SPIConfig);
 
 }
 void LedMatrix_Clear(void)
@@ -128,15 +128,15 @@ static void LedMatrix_PartialWriteMemory(uint8_t startAddress, uint8_t length)
 	SPI_SendByte(WRITE_MEMORY);
 	SPI_SendByte(startAddress);
 
-	DMATransfer.sourceAddress = screenBuffer + startAddress;
+	DMATransfer.sourceAddress = (uint32_t)(screenBuffer + startAddress);
 	DMATransfer.majorLoopCounts = length * 3;
 	DMA_SetTransferConfig(0,&DMATransfer);
-	// SPI_EnableDMAReqests();
+	SPI_EnableTxFIFOFillDMARequests(SPI_0);
 }
 
 static void LedMatrix_SendUpdate()
 {
-	//SPI_DisableDMAReqests();
+	SPI_DisableTxFIFOFillRequests(SPI_0);
 	SPI_SendByte(updateMode);
 }
 
