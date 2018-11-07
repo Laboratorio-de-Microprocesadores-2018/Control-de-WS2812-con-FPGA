@@ -15,6 +15,7 @@
 //#include "LedMatrix.h"
 #include "SysTick.h"
 #include "SPI.h"
+#include "DMA.h"
 /////////////////////////////////////////////////////////////////////////////////
 //                       Constants and macro definitions                       //
 /////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +47,13 @@ void App_Init (void)
 	SPI_MasterGetDefaultConfig(&config);
 	config.baudRate = SPI_tenPowerDelay;
 	SPI_MasterInit(SPI_0, &config);
+	DMA_Config DMAconfig;
+
+//	DMA_GetDefaultConfig(&DMAconfig);
+//	DMAconfig.enableDebugMode=false;
+//	DMA_Init(&DMAconfig);
+//	DMAMUX_Init();
+
 //	LedMatrix_Init();
 }
 
