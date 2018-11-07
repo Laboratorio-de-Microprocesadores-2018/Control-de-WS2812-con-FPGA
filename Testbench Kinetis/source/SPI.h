@@ -56,7 +56,7 @@ typedef enum{
 typedef struct
 {
 
-	bool enableMaster, enableStopInWaitMode, enableShiftRegister, disableTxFIFO, disableRxFIFO, continuousSerialCLK;
+	bool enableMaster, enableStopInWaitMode, enableShiftRegister, disableTxFIFO, disableRxFIFO, continuousSerialCLK, continuousChipSelect;
 	SPI_CTAR CTARUsed;
 	SPI_PCSignal PCSSignalSelect;
 	SPI_BitsPerFrame bitsPerFrame;

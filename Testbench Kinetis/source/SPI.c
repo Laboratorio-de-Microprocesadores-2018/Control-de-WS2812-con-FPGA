@@ -18,19 +18,17 @@ NEW_CIRCULAR_BUFFER(recieveBuffer,BUFFER_SIZE,sizeof(uint8_t));
 
 void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config)
 {
-
 //	MCR config
 	config->enableShiftRegister = true;
 	config->disableTxFIFO = false;
 	config->disableRxFIFO = false;
-	config->chipSelectActiveState = SPI_PCSActiveHigh;
+	config->chipSelectActiveState = SPI_PCSActiveLow;
 	config->enableMaster = true;
-	config->continuousSerialCLK = false;
+	config->continuousSerialCLK = true;		//CON ESTE HABILITO EL CONTINUOUS CLK
 
 
 //	CTAR config
-	config->CTARUsed = SPI_CTAR_0;
-	config->bitsPerFrame = SPI_sixteenBitsFrame;
+	config->bitsPerFrame = SPI_eightBitsFrame;
 	config->polarity = SPI_ClockActiveHigh;
 	config->phase = SPI_ClockPhaseSecondEdge;
 	config->direction = SPI_FirstLSB;
@@ -38,6 +36,9 @@ void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config)
 	config->baudRate = SPI_twoPowerDelay;
 
 
+//	PUSHR config
+	config->CTARUsed = SPI_CTAR_0;
+	config->continuousChipSelect = false;
 	config->PCSSignalSelect = SPI_PCS_0;
 
 //	config->enableStopInWaitMode;
@@ -111,7 +112,7 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 //	SPIs[n]->RSER = ;
 
 //	PUSH Tx FIFO register in master mode
-	SPIs[n]->PUSHR = SPI_PUSHR_CONT(false) | // Return CS signal to inactive state between transfers.
+	SPIs[n]->PUSHR = SPI_PUSHR_CONT(config->continuousChipSelect) | // Return CS signal to inactive state between transfers.
 			SPI_PUSHR_CTAS(config->CTARUsed) |
 			SPI_PUSHR_PCS(1<<config->PCSSignalSelect);
 

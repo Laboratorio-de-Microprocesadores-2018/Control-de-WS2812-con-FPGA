@@ -46,7 +46,6 @@ void App_Init (void)
 	SPI_MasterConfig config;
 	SPI_MasterGetDefaultConfig(&config);
 	config.baudRate = SPI_tenPowerDelay;
-	config.continuousSlaveSelection = true;
 	SPI_MasterInit(SPI_0, &config);
 
 	DMA_Config DMAconfig;
