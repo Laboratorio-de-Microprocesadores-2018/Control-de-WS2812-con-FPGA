@@ -15,6 +15,7 @@
 //#include "LedMatrix.h"
 #include "SysTick.h"
 #include "SPI.h"
+#include "DMA.h"
 /////////////////////////////////////////////////////////////////////////////////
 //                       Constants and macro definitions                       //
 /////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +46,6 @@ void App_Init (void)
 	SPI_MasterConfig config;
 	SPI_MasterGetDefaultConfig(&config);
 	config.baudRate = SPI_tenPowerDelay;
-	config.continuousSlaveSelection = true;
 	SPI_MasterInit(SPI_0, &config);
 	SPI_EnableEOQInterruptRequests(SPI_0);
 	sysTickInit();
