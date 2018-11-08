@@ -27,6 +27,13 @@ typedef enum {
 }SPI_CLKDelayScaler;
 
 typedef enum {
+	SPI_DelayAfterTransferPreScaleOne,
+	SPI_DelayAfterTransferPreScaleThree,
+	SPI_DelayAfterTransferPreScaleFive,
+	SPI_DelayAfterTransferPreScaleSeven
+}SPI_DelayAfterTransferPreScale;
+
+typedef enum {
 	SPI_ClockActiveHigh,
 	SPI_ClockActiveLow,
 }SPI_ClockPolarity;
@@ -60,7 +67,8 @@ typedef struct
 	SPI_CTAR CTARUsed;
 	SPI_PCSignal PCSSignalSelect;
 	SPI_BitsPerFrame bitsPerFrame;
-	SPI_CLKDelayScaler clockDelayScaler;
+	SPI_CLKDelayScaler clockDelayScaler, delayAfterTransfer, chipSelectToClkDelay;
+	SPI_DelayAfterTransferPreScale delayAfterTransferPreScale;
 	SPI_ChipSelectActiveState chipSelectActiveState;
 	SPI_ClockPolarity polarity;
 	SPI_ClockPhase phase;
@@ -80,6 +88,7 @@ void SPI_EnableTxFIFOFillInterruptRequests(SPI_Instance n);
 void SPI_DisableTxFIFOFillRequests(SPI_Instance n);
 void SPI_EnableEOQInterruptRequests(SPI_Instance n);
 void SPI_DisableEOQInterruptRequests(SPI_Instance n);
+
 
 uint32_t SPI_GetDataRegisterAddress(SPI_Instance n);
 

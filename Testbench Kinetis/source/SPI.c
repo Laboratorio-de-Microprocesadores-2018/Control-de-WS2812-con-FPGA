@@ -12,10 +12,20 @@ static SPI_Type * SPIs[] = SPI_BASE_ADDRS;
 
 // Bytes left in current transfer
 static uint8_t bytesLeft;
+
 static SPI_Callback transferCallback;
 
 NEW_CIRCULAR_BUFFER(transmitBuffer,BUFFER_SIZE,sizeof(uint8_t));
 NEW_CIRCULAR_BUFFER(recieveBuffer,BUFFER_SIZE,sizeof(uint8_t));
+
+
+void SPI_ClearTxFIFO(SPI_Instance n);
+void SPI_StartCountingTxFIFO(SPI_Instance n);
+void SPI_HaltModule(SPI_Instance n);
+void SPI_RunModule(SPI_Instance n);
+void SPI_SetEOQ(SPI_Instance n);
+void SPI_ClearEOQ(SPI_Instance n);
+
 
 
 void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config)
@@ -26,7 +36,9 @@ void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config)
 	config->disableRxFIFO = false;
 	config->chipSelectActiveState = SPI_PCSActiveLow;
 	config->enableMaster = true;
-	config->continuousSerialCLK = true;		//CON ESTE HABILITO EL CONTINUOUS CLK
+	config->delayAfterTransferPreScale = SPI_DelayAfterTransferPreScaleOne;
+	config->delayAfterTransfer = SPI_eightPowerDelay;
+	config->continuousSerialCLK = false;		//CON ESTE HABILITO EL CONTINUOUS CLK
 
 
 //	CTAR config
@@ -36,11 +48,12 @@ void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config)
 	config->direction = SPI_FirstLSB;
 	config->clockDelayScaler = SPI_twoPowerDelay;
 	config->baudRate = SPI_twoPowerDelay;
+	config->chipSelectToClkDelay = SPI_eightPowerDelay;
 
 
 //	PUSHR config
 	config->CTARUsed = SPI_CTAR_0;
-	config->continuousChipSelect = false;
+	config->continuousChipSelect = true;	//CON ESTE HABILITO EL CONTINUOUS PCS
 	config->PCSSignalSelect = SPI_PCS_0;
 
 //	config->enableStopInWaitMode;
@@ -71,6 +84,8 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 		NVIC_EnableIRQ(SPI2_IRQn);
 	}
 
+
+
 	if((SPIs[n]->SR & SPI_SR_TXRXS_MASK) != SPI_SR_TXRXS_MASK)
 	{
 		if (config->enableMaster)
@@ -80,9 +95,9 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 					SPI_CTAR_CPOL(config->polarity) |
 					SPI_CTAR_CPHA(config->phase) |
 					SPI_CTAR_LSBFE(config->direction) |
-					SPI_CTAR_PCSSCK(0) | SPI_CTAR_CSSCK(config->clockDelayScaler) |
+					SPI_CTAR_PCSSCK(1) | SPI_CTAR_CSSCK(config->chipSelectToClkDelay) |
 					SPI_CTAR_PASC(0) | SPI_CTAR_ASC(config->clockDelayScaler) |
-					SPI_CTAR_PDT(1) | SPI_CTAR_DT(config->clockDelayScaler) |
+					SPI_CTAR_PDT(config->delayAfterTransferPreScale) | SPI_CTAR_DT(config->delayAfterTransfer) |
 					SPI_CTAR_PBR(0) | SPI_CTAR_BR(config->baudRate);
 		}else
 		{
@@ -91,10 +106,15 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 		}
 	}
 
+//	DMA/Interrupt request select and enable register (RSER)
+//	SPIs[n]->RSER = ;
 
+
+
+	SPI_HaltModule(n);
 //	Module configuration register (MCR)
-//	No estan configurados: FRZ, MTFE, DOZE, SMPL_PT
-	SPIs[n]->MCR = 0x00000000;
+//	No estan configurados: MTFE, DOZE, SMPL_PT
+	SPIs[n]->MCR = 0;
 	SPIs[n]->MCR = SPI_MCR_CONT_SCKE(config->continuousSerialCLK) |		//ACA HABILITO O DESHABILITO EL CONTINUOUS CLK
 			SPI_MCR_FRZ(false) |
 			SPI_MCR_PCSSE(false) |
@@ -105,20 +125,13 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 			SPI_MCR_DIS_RXF(config->disableRxFIFO) |
 			SPI_MCR_HALT(false);
 
-
-//	SPIs[n]->MCR &= !SPI_MCR_HALT_MASK;
-
-
-
-//	DMA/Interrupt request select and enable register (RSER)
-//	SPIs[n]->RSER = ;
-
+	SPI_RunModule(n);
 //	PUSH Tx FIFO register in master mode
 	SPIs[n]->PUSHR = SPI_PUSHR_CONT(config->continuousChipSelect) | // Return CS signal to inactive state between transfers.
 			SPI_PUSHR_CTAS(config->CTARUsed) |
 			SPI_PUSHR_PCS(1<<config->PCSSignalSelect);
 
-	SPIs[n]->MCR = SPI_MCR_MSTR(config->enableMaster);
+	SPIs[n]->MCR |= SPI_MCR_MSTR(config->enableMaster);
 
 	pinMode(PORTNUM2PIN(PC,5),OUTPUT);
 	PORT_Config portConfig;
@@ -146,6 +159,7 @@ void SPI_DisableTxFIFOFillRequests(SPI_Instance n)
 {
 	SPIs[n]->RSER &= !SPI_RSER_TFFF_RE_MASK;
 }
+
 void SPI_EnableEOQInterruptRequests(SPI_Instance n)
 {
 	SPIs[n]->RSER |= SPI_RSER_EOQF_RE_MASK;
@@ -154,6 +168,33 @@ void SPI_DisableEOQInterruptRequests(SPI_Instance n)
 {
 	SPIs[n]->RSER &= ~SPI_RSER_EOQF_RE_MASK;
 }
+
+void SPI_HaltModule(SPI_Instance n)
+{
+	SPIs[n]->MCR |= SPI_MCR_HALT_MASK;
+}
+void SPI_RunModule(SPI_Instance n)
+{
+	SPIs[n]->MCR &= ~SPI_MCR_HALT_MASK;
+}
+void SPI_ClearTxFIFO(SPI_Instance n)
+{
+	SPIs[n]->MCR |= SPI_MCR_CLR_TXF_MASK;
+}
+void SPI_StartCountingTxFIFO(SPI_Instance n)
+{
+	SPIs[n]->MCR &= ~SPI_MCR_CLR_TXF_MASK;
+}
+void SPI_SetEOQ(SPI_Instance n)
+{
+	SPIs[n]->MCR |= SPI_PUSHR_EOQ_MASK;
+}
+void SPI_ClearEOQ(SPI_Instance n)
+{
+	SPIs[n]->MCR &= ~SPI_PUSHR_EOQ_MASK;
+}
+
+
 uint32_t SPI_GetDataRegisterAddress(SPI_Instance n)
 {
 	return SPIs[n]->PUSHR;
@@ -169,6 +210,8 @@ bool SPI_SendByte( uint8_t byte)
 	}
 	else return false;
 }
+
+
 
 int SPI_SendFrame(uint8_t * data, uint8_t length, SPI_Callback callback)
 {
@@ -257,9 +300,20 @@ void SPI0_IRQHandler(void)
 			}
 			if(((SPIs[0]->SR & SPI_SR_TFFF_MASK) == SPI_SR_TFFF_MASK) && (pop(&transmitBuffer, &byte)))
 			{
-				SPIs[0]->PUSHR = (SPIs[0]->PUSHR &  ~SPI_PUSHR_TXDATA_MASK) | SPI_PUSHR_TXDATA(byte);
+				if(numel(&transmitBuffer) == 0)
+				{
+					SPIs[0]->PUSHR = (SPIs[0]->PUSHR &  ~SPI_PUSHR_TXDATA_MASK & ~SPI_PUSHR_CONT_MASK) | SPI_PUSHR_TXDATA(byte);
+
+				}else
+					SPIs[0]->PUSHR = (SPIs[0]->PUSHR &  ~SPI_PUSHR_TXDATA_MASK | SPI_PUSHR_CONT_MASK) | SPI_PUSHR_TXDATA(byte);
 			}else
+			{
+//				SPI_HaltModule(SPI_0);
+//				SPI_ClearTxFIFO(SPI_0);
+//				SPI_StartCountingTxFIFO(SPI_0);
+//				SPI_RunModule(SPI_0);
 				SPI_DisableTxFIFOFillRequests(SPI_0);
+			}
 		}else
 			SPIs[0]->MCR &= !SPI_MCR_FRZ_MASK;
 	}else
