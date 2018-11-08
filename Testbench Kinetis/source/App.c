@@ -12,10 +12,11 @@
 /////////////////////////////////////////////////////////////////////////////////
 //                             Included header files                           //
 /////////////////////////////////////////////////////////////////////////////////
-//#include "LedMatrix.h"
+#include "LedMatrix.h"
 #include "SysTick.h"
 #include "SPI.h"
 #include "DMA.h"
+#include "CPUTimeMeasurement.h"
 /////////////////////////////////////////////////////////////////////////////////
 //                       Constants and macro definitions                       //
 /////////////////////////////////////////////////////////////////////////////////
@@ -43,62 +44,86 @@
 /** Función que se llama 1 vez, al comienzo del programa */
 void App_Init (void)
 {
+	// Initialization of test pin
+	#ifdef MEASURE_CPU_TIME
+		MEASURE_CPU_TIME_PORT->PCR[MEASURE_CPU_TIME_PIN] = PORT_PCR_MUX(1);
+		MEASURE_CPU_TIME_GPIO->PDDR |= (1<<MEASURE_CPU_TIME_PIN);
+		MEASURE_CPU_TIME_GPIO->PDOR &= ~(1<<MEASURE_CPU_TIME_PIN);
+	#endif
+
+	/*
 	SPI_MasterConfig config;
 	SPI_MasterGetDefaultConfig(&config);
 	config.baudRate = SPI_tenPowerDelay;
 	SPI_MasterInit(SPI_0, &config);
 	SPI_EnableEOQInterruptRequests(SPI_0);
+	*/
 	sysTickInit();
-//	LedMatrix_Init();
+	LedMatrix_Init();
+}
+void sendUpdate()
+{
+	static uint8_t arr[] = {4,5};
+	SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),0);
 }
 
-void call(void)
-{
-	//static uint8_t arr[] = {4,5};
-	//SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),0);
-}
+
 /** Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
-	static uint8_t arr[] = {1,2,3};
+/*
+	static uint8_t arr[] = {1,2,3,4,5,6,7,8,9,10,11,12,13};
 	static uint64_t time;
 	if((millis()-time)>500)
 	{
 		time = millis();
-		SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),call);
-	}
+		SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),sendUpdate);
+
+		//while((millis()-time)<1);
+		//SPI_SendFrame(arr+2,1,0);
+
+	}*/
+/*
+	static Color c = {1,2,3};
+	static uint64_t time;
+	if((millis()-time)>20)
+	{
+		time = millis();
+		LedMatrix_PlainColor(c);
+
+	}*/
 
 
+	Color c;
 
-//	Color c;
-//
-//	c.R = 255;
-//	c.G = 0;
-//	c.B = 0;
-//	LedMatrix_PlainColor(c);
-//	delayMs(1000);
-//
-//	c.R = 0;
-//	c.G = 255;
-//	c.B = 0;
-//	LedMatrix_PlainColor(c);
-//	delayMs(1000);
-//
-//	c.R = 0;
-//	c.G = 0;
-//	c.B = 255;
-//	LedMatrix_PlainColor(c);
-//	delayMs(1000);
-//
-//	LedMatrix_ColorTest();
-//	while(LedMatrix_ColorTestRunning());
-//
-//	char text[] = "Hello world!";
-//
-//	Color fontColor = {.R=0,.G=0, .B=0};
-//	Color backgroundColor = {.R=0,.G=0,.B=255};
-//	LedMatrix_Print(text,sizeof(text)/sizeof(char),fontColor,backgroundColor);
-//
-//	while(1);
+	c.R = 255;
+	c.G = 0;
+	c.B = 0;
+	LedMatrix_PlainColor(c);
+	delayMs(1000);
+
+	c.R = 0;
+	c.G = 255;
+	c.B = 0;
+	LedMatrix_PlainColor(c);
+	delayMs(1000);
+
+	c.R = 0;
+	c.G = 0;
+	c.B = 255;
+	LedMatrix_PlainColor(c);
+	delayMs(1000);
+
+	//LedMatrix_ColorTest();
+	//while(LedMatrix_ColorTestRunning());
+
+	//char text[] = "Hello world!";
+
+	//Color fontColor = {.R=0,.G=0, .B=0};
+	//Color backgroundColor = {.R=0,.G=0,.B=255};
+	//LedMatrix_Print(text,sizeof(text)/sizeof(char),fontColor,backgroundColor);
+
+	//while(1);
+
 
 }

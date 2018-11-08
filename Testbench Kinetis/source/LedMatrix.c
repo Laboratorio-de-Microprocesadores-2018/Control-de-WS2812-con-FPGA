@@ -37,8 +37,8 @@ typedef struct{
 	Color data[NUMBER_OF_LEDS];
 }__attribute__((__packed__)) SPIFrame;
 
-
-static SPIFrame frame;
+static uint8_t frame[3*NUMBER_OF_LEDS+2];
+//static SPIFrame frame;
 
 static Color screenBuffer[NUMBER_OF_LEDS];
 
@@ -58,6 +58,33 @@ static void LedMatrix_SendUpdate();
 void LedMatrix_Init(void)
 {
 	sysTickInit();
+
+
+
+	SPI_MasterConfig config;
+	SPI_MasterGetDefaultConfig(&config);
+	config.baudRate = SPI_fivePowerDelay;
+	config.enableRxFIFOverflowOverwrite = false;
+	config.disableTxFIFO = false;
+	config.disableRxFIFO = false;
+	config.chipSelectActiveState = SPI_PCSActiveLow;
+	config.enableMaster = true;
+	config.delayAfterTransferPreScale = SPI_DelayAfterTransferPreScaleOne;
+	config.delayAfterTransfer = SPI_twoPowerDelay;
+	config.continuousSerialCLK = false;		//CON ESTE HABILITO EL CONTINUOUS CLK
+	config.bitsPerFrame = SPI_eightBitsFrame;
+	config.polarity = SPI_ClockActiveHigh;
+	config.phase = SPI_ClockPhaseSecondEdge;
+	config.direction = SPI_FirstLSB;
+	config.clockDelayScaler = SPI_twoPowerDelay;
+	config.chipSelectToClkDelay = SPI_twoPowerDelay;
+
+
+	SPI_MasterInit(SPI_0, &config);
+	SPI_EnableEOQInterruptRequests(SPI_0);
+
+	updateMode = UPDATE_NORMAL;
+
 
 	DMA_Config DMAconfig;
 	DMA_GetDefaultConfig(&DMAconfig);
@@ -86,13 +113,6 @@ void LedMatrix_Init(void)
 
 	//DMA_SetCallback(0,LedMatrix_SendUpdate);
 
-
-
-
-	SPI_MasterConfig SPIConfig; // Con DMA deshabilitado
-	SPI_MasterGetDefaultConfig(&SPIConfig);
-	SPI_MasterInit(SPI_0,&SPIConfig);
-	SPI_EnableTxFIFOFillDMARequests(SPI_0);
 }
 void LedMatrix_Clear(void)
 {
@@ -101,7 +121,7 @@ void LedMatrix_Clear(void)
 }
 void LedMatrix_PlainColor(Color c)
 {
-	for(int i=0; i<NUMBER_OF_LEDS; i+=3)
+	for(int i=0; i<NUMBER_OF_LEDS; i++)
 	{
 		screenBuffer[i]   = c;
 	}
@@ -131,40 +151,52 @@ static void LedMatrix_WriteMemory()
 	LedMatrix_PartialWriteMemory(0,NUMBER_OF_LEDS);
 }
 
+void sendUpdateDelayed(void)
+{
+	sysTickAddDelayCall(LedMatrix_SendUpdate,1e-3);
+
+}
 static void LedMatrix_PartialWriteMemory(uint8_t startAddress, uint8_t length)
 {
 	ASSERT(startAddress < NUMBER_OF_LEDS);
-	ASSERT(length < NUMBER_OF_LEDS - startAddress);
+	ASSERT(length <= NUMBER_OF_LEDS - startAddress);
 
 	//SPI_SendByte(WRITE_MEMORY);
 	//SPI_SendByte(startAddress);
 	//SPI_SendBytes((uint8_t*)(screenBuffer + startAddress), 3*length);
 
 	// Build frame
-	frame.command = WRITE_MEMORY;
-	frame.startAddress = startAddress;
-	for(int i=0; i<length;i++)
-		frame.data[i] = screenBuffer[startAddress+i];
+	frame[0] = WRITE_MEMORY;
+	frame[1] = startAddress;
+	for(int i=0; i<3*length-2;i+=3)
+	{
+		frame[2+i+0] = screenBuffer[startAddress+i/3].R;
+		frame[2+i+1] = screenBuffer[startAddress+i/3].G;
+		frame[2+i+2] = screenBuffer[startAddress+i/3].B;
+	}
 
+	SPI_SendFrame(frame,2 + length * 3,LedMatrix_SendUpdate);
+	/*
 	// Configure DMA transfer
 	DMATransfer.sourceAddress = (uint32_t)(&frame);
 	DMATransfer.majorLoopCounts = 2 + length * 3;
 	DMA_SetTransferConfig(0,&DMATransfer);
 
 	// Enable request to start transfer
-	DMA_EnableChannelRequest(0);
+	DMA_EnableChannelRequest(0);*/
 }
 
 static void LedMatrix_SendUpdate()
 {
 	// Build frame
-	frame.command = updateMode;
-
+	frame[0] = updateMode;
+	SPI_SendFrame(frame,1,0);
+	/*
 	// Configure DMA transfer
 	DMATransfer.sourceAddress = (uint32_t)(&frame);
 	DMATransfer.majorLoopCounts = 1;
 	DMA_SetTransferConfig(0,&DMATransfer);
-
+*/
 
 }
 
