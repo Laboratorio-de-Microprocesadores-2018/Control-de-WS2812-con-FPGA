@@ -11,8 +11,8 @@ typedef enum {SPI_CTAR_0, SPI_CTAR_1}SPI_CTAR;
 typedef enum {SPI_PCS_0, SPI_PCS_1, SPI_PCS_2, SPI_PCS_3, SPI_PCS_4, SPI_PCS_5}SPI_PCSignal;
 
 typedef enum {
-	SPI_PCSActiveLow,
 	SPI_PCSActiveHigh,
+	SPI_PCSActiveLow,
 }SPI_ChipSelectActiveState;
 
 typedef enum {
@@ -63,7 +63,7 @@ typedef enum{
 typedef struct
 {
 
-	bool enableMaster, enableStopInWaitMode, enableShiftRegister, disableTxFIFO, disableRxFIFO, continuousSerialCLK, continuousChipSelect;
+	bool enableMaster, enableStopInWaitMode, enableRxFIFOverflowOverwrite, disableTxFIFO, disableRxFIFO, continuousSerialCLK, continuousChipSelect;
 	SPI_CTAR CTARUsed;
 	SPI_PCSignal PCSSignalSelect;
 	SPI_BitsPerFrame bitsPerFrame;
