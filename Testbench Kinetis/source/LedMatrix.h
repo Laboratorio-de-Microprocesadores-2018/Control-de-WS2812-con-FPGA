@@ -16,7 +16,6 @@
 #define MATRIX_WIDTH 8
 #define MATRIX_HEIGHT 8
 
-
 /////////////////////////////////////////////////////////////////////////////////
 //                    Enumerations, structures and typedefs                    //
 /////////////////////////////////////////////////////////////////////////////////
@@ -68,10 +67,16 @@ void LedMatrix_Mirror(bool b);
  */
 void LedMatrix_PrintLed(uint8_t row, uint8_t col, Color c);
 
-
+/**
+ *
+ */
 void LedMatrix_PrintLedInvalid(uint8_t row, uint8_t col, Color c);
 
-void LedMatrix_PrintScreen(const Color * screen);
+/**
+ *
+ */
+void LedMatrix_PrintScreen(Color * screen);
+
 /**
  *
  */
@@ -81,11 +86,6 @@ void LedMatrix_PlainColor(Color c);
  *
  */
 void LedMatrix_ColorTest();
-
-/**
- *
- */
-bool LedMatrix_ColorTestRunning();
 
 /**
  *

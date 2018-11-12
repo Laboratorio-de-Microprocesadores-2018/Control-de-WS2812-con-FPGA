@@ -102,7 +102,7 @@ void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config)
 				SPI_CTAR_PDT(3)|//config->delayAfterTransferPreScale) |
 				SPI_CTAR_DT(config->delayAfterTransfer) |  //Delay After Transfer Scaler: tDT = (1/fP ) x PDT x DT
 
-				SPI_CTAR_DBR(0)|
+				SPI_CTAR_DBR(1)|
 				SPI_CTAR_PBR(0) |
 				SPI_CTAR_BR(config->baudRate);  // Baud Rate Scaler: SCK baud rate = (fP /PBR) x [(1+DBR)/BR]
 	}else

@@ -9,7 +9,6 @@
 #include "Board.h"
 #include "Font.h"
 
-
 /////////////////////////////////////////////////////////////////////////////////
 //                       Constants and macro definitions                       //
 /////////////////////////////////////////////////////////////////////////////////
@@ -17,7 +16,7 @@
 #define TEXT_BUFFER_LEN 40
 #define NUMBER_OF_LEDS (MATRIX_WIDTH * MATRIX_HEIGHT)
 #define SCREEN_BUFFER_SIZE  (NUMBER_OF_LEDS * 3)
-#define SCROLL_PERIOD 0.4
+#define SCROLL_PERIOD 0.17
 
 #define RESET_PIN PORTNUM2PIN(PC,3)
 #define BUSY_PIN PORTNUM2PIN(PA,2)
@@ -35,36 +34,47 @@ typedef enum {
 //                   Local variable definitions ('static')                     //
 /////////////////////////////////////////////////////////////////////////////////
 
-static char textBuffer[TEXT_BUFFER_LEN+1];
-static uint16_t textLength;
-static uint16_t screenTextBufferLength;
+// Back buffer of screen
 static Color screenBuffer[NUMBER_OF_LEDS];
+
+
+// Text buffer
+static char textBuffer[TEXT_BUFFER_LEN+1];
+// Length of text
+static uint16_t textLength;
+
+
+// Rendered text buffer
 static Color screenTextBuffer[MATRIX_HEIGHT][(FONT_CHAR_WIDTH + FONT_SEPARATION)*(TEXT_BUFFER_LEN+1)];
+// Rendered text buffer length
+static uint16_t screenTextBufferLength;
 
 
+// Update mode: normal or flipped
 static Command updateMode;
 
-
-static bool colorTestRunning;
-//static DMA_TransferConfig DMATransfer;
+// Scroll mode: once or continuous
 static ScrollMode scrollMode;
+// Flag of scrolling text
 static bool scrolling;
+// Index to rendered buffer
 static uint16_t scrollIndex;
 
 
-// SPI transfer to write memory: |WRITE_MEMORY|STAR_ADDRESS| data... |
-typedef struct{
-	Command command;
-	uint8_t startAddress;
-	Color data[NUMBER_OF_LEDS];
-}__attribute__((__packed__)) SPIFrame;
-
+// SPI frame to send: |WRITE_MEMORY|STAR_ADDRESS| data... |
 static uint8_t frame[3*NUMBER_OF_LEDS+2];
 
+/////////////////////////////////////////////////////////////////////////////////
+//                          Local functions declarations                       //
+/////////////////////////////////////////////////////////////////////////////////
 
+// Update entire memory
 static void LedMatrix_WriteMemory();
+// Update only a part of memory
 static void LedMatrix_PartialWriteMemory(uint8_t startAddress, uint8_t length);
+// Send update command
 static void LedMatrix_SendUpdate();
+// Periodic interrupt to scroll text
 static void LedMatrix_ScrollText();
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -75,11 +85,10 @@ void LedMatrix_Init(void)
 {
 	sysTickInit();
 
-
-
+	// Configure SPI module
 	SPI_MasterConfig config;
 	SPI_MasterGetDefaultConfig(&config);
-	config.baudRate = SPI_fivePowerDelay;
+	config.baudRate = SPI_onePowerDelay;
 	config.enableRxFIFOverflowOverwrite = false;
 	config.disableTxFIFO = false;
 	config.disableRxFIFO = false;
@@ -87,14 +96,13 @@ void LedMatrix_Init(void)
 	config.enableMaster = true;
 	config.delayAfterTransferPreScale = SPI_DelayAfterTransferPreScaleOne;
 	config.delayAfterTransfer = SPI_twoPowerDelay;
-	config.continuousSerialCLK = false;		//CON ESTE HABILITO EL CONTINUOUS CLK
+	config.continuousSerialCLK = false;
 	config.bitsPerFrame = SPI_eightBitsFrame;
 	config.polarity = SPI_ClockActiveHigh;
 	config.phase = SPI_ClockPhaseFirstEdge;
 	config.direction = SPI_FirstMSB;
 	config.clockDelayScaler = SPI_twoPowerDelay;
 	config.chipSelectToClkDelay = SPI_twoPowerDelay;
-
 
 	SPI_MasterInit(SPI_0, &config);
 	SPI_EnableEOQInterruptRequests(SPI_0);
@@ -104,53 +112,18 @@ void LedMatrix_Init(void)
 	pinMode(RESET_PIN,OUTPUT);
 	pinMode(BUSY_PIN,INPUT_PULLUP);
 
-	// Reset pulse
+	// Generate reset pulse!!
 	digitalWrite(RESET_PIN,1);
 	uint16_t n=0xFFFF;
 	while(n--);
 	digitalWrite(RESET_PIN,0);
 
-
-
 	updateMode = UPDATE_NORMAL;
 	scrollIndex = 0;
 	scrolling=false;
+
+	// Add to systick periodic callback to scroll text
 	sysTickAddCallback(LedMatrix_ScrollText,SCROLL_PERIOD);
-
-
-
-
-
-
-/*
-	DMA_Config DMAconfig;
-	DMA_GetDefaultConfig(&DMAconfig);
-	DMAconfig.enableDebugMode = true;
-	DMA_Init(&DMAconfig);
-	DMAMUX_Init();
-
-	// Configure DMA0 to copy from screenBuffer to SPI transmitter
-	DMAMUX_SetSource(0,DMAMUX_SPI0_TX);
-	DMAMUX_EnableChannel(0,DMAMUX_Normal);
-
-	DMATransfer.sourceAddress = (uint32_t)screenBuffer;
-	DMATransfer.sourceOffset = 1;
-	DMATransfer.sourceTransferSize = DMA_TransferSize1Bytes;
-
-	DMATransfer.destinationAddress = (uint32_t)SPI_GetDataRegisterAddress(SPI_0);
-	DMATransfer.destinationOffset = 0;
-	DMATransfer.destinationTransferSize = DMA_TransferSize1Bytes;
-
-	DMATransfer.majorLoopCounts = sizeof(screenBuffer)/sizeof(uint8_t);
-	DMATransfer.minorLoopBytes = 1;
-	DMATransfer.sourceLastAdjust = -1*sizeof(screenBuffer)/sizeof(uint8_t);
-	DMATransfer.destinationLastAdjust = 0;
-	DMA_SetTransferConfig(0,&DMATransfer);
-*/
-
-	//DMA_EnableChannelRequest (0);
-
-	//DMA_SetCallback(0,LedMatrix_SendUpdate);
 
 }
 
@@ -160,15 +133,14 @@ void LedMatrix_Mirror(bool b)
 		updateMode = UPDATE_MIRRORED;
 	else
 		updateMode = UPDATE_NORMAL;
+	LedMatrix_WriteMemory();
 }
 
 void LedMatrix_Clear(void)
 {
 	Color c = {0,0,0};
 	for(int i=0; i<NUMBER_OF_LEDS; i++)
-	{
 		screenBuffer[i]   = c;
-	}
 	LedMatrix_WriteMemory();
 }
 
@@ -185,7 +157,6 @@ void LedMatrix_PrintLed(uint8_t row, uint8_t col, Color c)
 	uint8_t index = row*MATRIX_WIDTH + col;
 	screenBuffer[index] = c;
 	LedMatrix_PartialWriteMemory(index,1);
-
 }
 
 void LedMatrix_PrintLedInvalid(uint8_t row, uint8_t col, Color c)
@@ -200,7 +171,7 @@ void LedMatrix_PrintLedInvalid(uint8_t row, uint8_t col, Color c)
 	SPI_SendFrame(frame,4,LedMatrix_SendUpdate);
 }
 
-void LedMatrix_PrintScreen(const Color * screen)
+void LedMatrix_PrintScreen(Color * screen)
 {
 	for(int row=0; row<MATRIX_HEIGHT; row++)
 	{
@@ -223,15 +194,103 @@ void LedMatrix_PlainColor(Color c)
 
 void LedMatrix_ColorTest(void)
 {
-	colorTestRunning = true;
+	////////////////////////////////////////////////////////////////////////////
+	//  Colores estaticos
+	static Color R = {10,0,0};
+	static Color G = {0,10,0};
+	static Color B = {0,0,10};
+	static Color W = {100,100,100};
 
-	LedMatrix_WriteMemory();
+	////////////////////////////////////////////////////////////////////////////
+	// Prueba led por led
+	Color colors[3] = {R,G,B};
+	LedMatrix_Clear();
+	delayMs(100);
+	for(int i=0; i<MATRIX_HEIGHT; i++)
+	{
+		for(int j=0; j<MATRIX_WIDTH; j++)
+		{
+			LedMatrix_PrintLed(i,j,colors[i%3]);
+			delayMs(100);
+		}
+	}
+	////////////////////////////////////////////////////////////////////////////
+	// Prueba de colores y brillo creciente
+	delayMs(1);
+	for(int i=0; i<25; i++)
+	{
+		LedMatrix_PlainColor(R);
+		delayMs(200);
+		LedMatrix_PlainColor(G);
+		delayMs(200);
+		LedMatrix_PlainColor(B);
+		delayMs(200);
+
+		R.R +=2;
+		G.G +=2;
+		B.B +=2;
+	}
+	LedMatrix_PlainColor(W);
+	delayMs(4000);
+	////////////////////////////////////////////////////////////////////////////
+	// Prueba de texto
+	Color fontColor = {0,0,10};
+	Color backgroundColor = {10,10,10};
+	LedMatrix_Print("ITBA ", 5,fontColor,backgroundColor, SCROLL_CONTINUOUS);
+	delayMs(20000);
+	LedMatrix_StopScrolling();
+
+	////////////////////////////////////////////////////////////////////////////
+
+	// Prueba de texto
+	LedMatrix_Mirror(true);
+	LedMatrix_Print("ITBA ", 5,fontColor,backgroundColor, SCROLL_CONTINUOUS);
+	delayMs(20000);
+	LedMatrix_StopScrolling();
+	LedMatrix_Mirror(false);
+		////////////////////////////////////////////////////////////////////////////
+
+	R.R = 20;
+	G.G = 20;
+	B.B = 20;
+
+	Color screen1[8][8] ={{R,R,G,G,B,B,W,W},
+								{R,R,G,G,B,B,W,W},
+								{R,R,G,G,B,B,W,W},
+								{R,R,G,G,B,B,W,W},
+								{R,R,G,G,B,B,W,W},
+								{R,R,G,G,B,B,W,W},
+								{R,R,G,G,B,B,W,W},
+								{R,R,G,G,B,B,W,W}};
+	LedMatrix_PrintScreen(screen1[0]);
+	delayMs(4000);
+
+	Color screen2[8][8] ={{R,R,R,R,R,R,R,R},
+								{R,R,R,R,R,R,R,R},
+								{G,G,G,G,G,G,G,G},
+								{G,G,G,G,G,G,G,G},
+								{B,B,B,B,B,B,B,B},
+								{B,B,B,B,B,B,B,B},
+								{W,W,W,W,W,W,W,W},
+								{W,W,W,W,W,W,W,W}};
+	LedMatrix_PrintScreen(screen2[0]);
+	delayMs(4000);
+
+
+	////////////////////////////////////////////////////////////////////////////
+	// Prueba de que comando invalido no actualiza la memoria
+	// Imprimo todo blanco
+	Color c = {10,10,10};
+	LedMatrix_PlainColor(c);
+	delayMs(1000);
+	c.B=0;
+	c.G=0;
+	// Mando un comando invalido
+	LedMatrix_PrintLedInvalid(3,3,c);
+
+	delayMs(1000);
 }
 
-bool LedMatrix_ColorTestRunning(void)
-{
-	return colorTestRunning;
-}
 
 void LedMatrix_Print(char * c, uint8_t len,Color fontColor, Color backgroundColor, ScrollMode mode)
 {
@@ -248,7 +307,6 @@ void LedMatrix_Print(char * c, uint8_t len,Color fontColor, Color backgroundColo
 	}
 	else
 		memcpy(textBuffer,c,len);
-
 
 	textLength = len;
 	screenTextBufferLength = textLength*(FONT_CHAR_WIDTH+FONT_SEPARATION);
@@ -276,7 +334,6 @@ void LedMatrix_Print(char * c, uint8_t len,Color fontColor, Color backgroundColo
 
 static void LedMatrix_ScrollText()
 {
-
 	if(scrolling)
 	{
 		for(int row=0; row<MATRIX_HEIGHT; row++)
@@ -287,7 +344,6 @@ static void LedMatrix_ScrollText()
 			}
 		}
 		LedMatrix_WriteMemory();
-
 
 		scrollIndex = scrollIndex + 1;
 
@@ -300,11 +356,7 @@ static void LedMatrix_ScrollText()
 			}
 		}
 		else if(scrollMode == SCROLL_CONTINUOUS)
-		{
 			scrollIndex %= screenTextBufferLength;
-		}
-
-
 	}
 }
 
@@ -312,6 +364,7 @@ void LedMatrix_StopScrolling()
 {
 	scrolling=false;
 }
+
 void LedMatrix_StartScrolling()
 {
 	scrolling=true;
@@ -322,31 +375,24 @@ static void LedMatrix_WriteMemory()
 	LedMatrix_PartialWriteMemory(0,NUMBER_OF_LEDS);
 }
 
-
 static void LedMatrix_PartialWriteMemory(uint8_t startAddress, uint8_t length)
 {
-	ASSERT(startAddress < NUMBER_OF_LEDS);
-	ASSERT(length <= NUMBER_OF_LEDS - startAddress);
-
-	// Build frame
-	frame[0] = WRITE_MEMORY;
-	frame[1] = startAddress;
-	for(int i=0; i<3*length-2;i+=3)
+	if(LedMatrix_IsBusy()==false)
 	{
-		frame[2+i+0] = screenBuffer[startAddress+i/3].R;
-		frame[2+i+1] = screenBuffer[startAddress+i/3].G;
-		frame[2+i+2] = screenBuffer[startAddress+i/3].B;
+		ASSERT(startAddress < NUMBER_OF_LEDS);
+		ASSERT(length <= NUMBER_OF_LEDS - startAddress);
+
+		// Build frame
+		frame[0] = WRITE_MEMORY;
+		frame[1] = startAddress;
+		for(int i=0; i<3*length-2;i+=3)
+		{
+			frame[2+i+0] = screenBuffer[startAddress+i/3].R;
+			frame[2+i+1] = screenBuffer[startAddress+i/3].G;
+			frame[2+i+2] = screenBuffer[startAddress+i/3].B;
+		}
+		SPI_SendFrame(frame,2 + length * 3,LedMatrix_SendUpdate);
 	}
-
-	SPI_SendFrame(frame,2 + length * 3,LedMatrix_SendUpdate);
-	/*
-	// Configure DMA transfer
-	DMATransfer.sourceAddress = (uint32_t)(&frame);
-	DMATransfer.majorLoopCounts = 2 + length * 3;
-	DMA_SetTransferConfig(0,&DMATransfer);
-
-	// Enable request to start transfer
-	DMA_EnableChannelRequest(0);*/
 }
 
 static void LedMatrix_SendUpdate()
