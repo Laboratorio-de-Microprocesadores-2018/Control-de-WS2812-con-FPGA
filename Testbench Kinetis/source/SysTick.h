@@ -62,11 +62,22 @@ bool sysTickAddDelayCall(SysTickFnc fnc,float time);
  */
 uint64_t millis();
 
+
+/**
+ * @brief Return the number of microseconds since the program execution started.
+ * @return Time in milliseconds.
+ */
+uint64_t micros();
+
 /**
  * @brief Delat the execution of the program the number of milliseconds given
  */
 void delayMs(uint64_t ms);
 
+/**
+ * @brief Delat the execution of the program the number of microseconds given
+ */
+void delayUs(uint64_t us);
 //*******************************************************************************
 
 /////////////////////////////////////////////////////////////////////////////////

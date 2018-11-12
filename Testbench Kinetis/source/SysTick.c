@@ -12,7 +12,7 @@
 
 #include "SysTick.h"
 #include "Board.h"
-
+#include "Assert.h"
 
 // If defined, a GPIO pin is raised during sysTickHandler execution, in order
 // to make measurements.
@@ -39,6 +39,9 @@ static int callbacksSize;
 
 static uint64_t _millisCount;
 
+static uint64_t _microsCount;
+
+
 static void millisCount()
 {
 	_millisCount++;
@@ -53,6 +56,22 @@ void delayMs(uint64_t ms)
 {
 	uint64_t now = _millisCount;
 	while((_millisCount - now)<ms);
+}
+
+static void microsCount()
+{
+	_microsCount++;
+}
+
+uint64_t micros()
+{
+	return _microsCount;
+}
+
+void delayUs(uint64_t us)
+{
+	uint64_t now = _microsCount;
+	while((_microsCount - now)<us);
 }
 
 
@@ -73,11 +92,14 @@ uint32_t sysTickInit()
 	SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk|SysTick_CTRL_TICKINT_Msk|SysTick_CTRL_ENABLE_Msk;
 
 	sysTickAddCallback(&millisCount,1*MS2S);
+	//sysTickAddCallback(&microsCount,50*US2S);
 	return (1UL);
 }
 
 bool sysTickAddCallback(SysTickFnc fnc,float period)
 {
+	ASSERT((period/SYSTICK_ISR_PERIOD_S+0.5) >= 1);
+
 	// If the array is not full
 	if(callbacksSize < SYSTICK_MAX_CALLBACKS)
 	{

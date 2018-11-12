@@ -81,14 +81,18 @@ typedef struct
 typedef void (*SPI_Callback)(void);
 
 void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config);
+
 void SPI_MasterInit(SPI_Instance n, SPI_MasterConfig * config);
 
 void SPI_EnableTxFIFOFillDMARequests(SPI_Instance n);
-void SPI_EnableTxFIFOFillInterruptRequests(SPI_Instance n);
-void SPI_DisableTxFIFOFillRequests(SPI_Instance n);
-void SPI_EnableEOQInterruptRequests(SPI_Instance n);
-void SPI_DisableEOQInterruptRequests(SPI_Instance n);
 
+void SPI_EnableTxFIFOFillInterruptRequests(SPI_Instance n);
+
+void SPI_DisableTxFIFOFillRequests(SPI_Instance n);
+
+void SPI_EnableEOQInterruptRequests(SPI_Instance n);
+
+void SPI_DisableEOQInterruptRequests(SPI_Instance n);
 
 uint32_t SPI_GetDataRegisterAddress(SPI_Instance n);
 

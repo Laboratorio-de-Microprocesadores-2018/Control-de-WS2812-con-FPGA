@@ -40,7 +40,7 @@ void SPI_MasterGetDefaultConfig(SPI_MasterConfig * config)
 	config->delayAfterTransferPreScale = SPI_DelayAfterTransferPreScaleOne;
 	config->delayAfterTransfer = SPI_eightPowerDelay;
 	config->continuousSerialCLK = false;		//CON ESTE HABILITO EL CONTINUOUS CLK
-
+	config->CTARUsed = SPI_CTAR_0;
 
 //	CTAR config
 	config->bitsPerFrame = SPI_eightBitsFrame;

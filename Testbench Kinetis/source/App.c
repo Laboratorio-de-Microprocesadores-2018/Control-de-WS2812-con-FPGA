@@ -71,48 +71,129 @@ void sendUpdate()
 /** Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
+	static const Color R = {10,0,0};
+	static const Color G = {0,10,0};
+	static const Color B = {0,0,10};
+	static const Color W = {10,10,10};
+	const Color screen[8][8] ={ 	{W,G,G,G,G,G,G,W},
+									{R,G,G,G,G,G,G,B},
+									{R,G,G,G,G,G,G,B},
+									{R,G,G,G,G,G,G,B},
+									{R,G,G,G,G,G,G,B},
+									{R,G,G,G,G,G,G,B},
+									{R,G,G,G,G,G,G,B},
+									{W,G,G,G,G,G,G,W}
+								};
+	//LedMatrix_Mirror(true);
+	LedMatrix_PrintScreen(screen[0]);
+	delayMs(40);
+	//LedMatrix_PrintLed(0,7,R);
+	delayMs(40);
+	//LedMatrix_PrintLed(7,7,G);
+	while(1);
+
+
+	Color fontColor = {30,30,30};
+	Color backgroundColor ={0,0,10};
+
+	//LedMatrix_Mirror(true);
+	LedMatrix_Print("ITBA", 4,fontColor,backgroundColor, SCROLL_CONTINUOUS);
+
+	while(1);
+
 /*
-	static uint8_t arr[] = {1,2,3,4,5,6,7,8,9,10,11,12,13};
-	static uint64_t time;
-	if((millis()-time)>500)
-	{
-		time = millis();
-		SPI_SendFrame(arr,sizeof(arr)/sizeof(arr[0]),sendUpdate);
-
-		//while((millis()-time)<1);
-		//SPI_SendFrame(arr+2,1,0);
-
-	}*/
-/*
-	static Color c = {1,2,3};
-	static uint64_t time;
-	if((millis()-time)>20)
-	{
-		time = millis();
-		LedMatrix_PlainColor(c);
-
-	}*/
-
-
 	Color c;
 
 	c.R = 255;
 	c.G = 0;
 	c.B = 0;
-	LedMatrix_PlainColor(c);
-	delayMs(1000);
 
+
+	if(LedMatrix_IsBusy()==false)
+	{
+		LedMatrix_Clear();
+		delayMs(4000);
+	}
+
+
+	if(LedMatrix_IsBusy()==false)
+	{
+		c.R = 10;
+		c.G = 0;
+		c.B = 0;
+		LedMatrix_PlainColor(c);
+			delayMs(4000);
+	}
+
+	if(LedMatrix_IsBusy()==false)
+	{
+		c.R = 0;
+		c.G = 10;
+		c.B = 0;
+		LedMatrix_PlainColor(c);
+			delayMs(4000);
+	}
+
+	if(LedMatrix_IsBusy()==false)
+	{
+		c.R = 0;
+		c.G = 0;
+		c.B = 10;
+		LedMatrix_PlainColor(c);
+			delayMs(4000);
+	}
+
+	if(LedMatrix_IsBusy()==false)
+	{
+		c.R = 10;
+		c.G = 10;
+		c.B = 0;
+		LedMatrix_PrintLed(3,3,c);
+		delayMs(1000);
+	}
+
+	if(LedMatrix_IsBusy()==false)
+	{
+		c.R = 20;
+		c.G = 20;
+		c.B = 0;
+		LedMatrix_PrintLed(3,4,c);
+		delayMs(1000);
+	}
+
+	if(LedMatrix_IsBusy()==false)
+	{
+		c.R = 30;
+		c.G = 30;
+		c.B = 0;
+		LedMatrix_PrintLed(3,5,c);
+		delayMs(1000);
+	}
+
+*/
+
+
+/*
 	c.R = 0;
-	c.G = 255;
+	c.G = 30;
 	c.B = 0;
-	LedMatrix_PlainColor(c);
-	delayMs(1000);
+	if(LedMatrix_IsBusy()==false)
+		LedMatrix_PlainColor(c);
+	delayMs(4000);
 
+*/
+
+
+
+
+
+	/*
 	c.R = 0;
 	c.G = 0;
 	c.B = 255;
 	LedMatrix_PlainColor(c);
-	delayMs(1000);
+	delayMs(4000);
+	*/
 
 	//LedMatrix_ColorTest();
 	//while(LedMatrix_ColorTestRunning());
